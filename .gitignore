@@ -64,3 +64,6 @@ buildNumber.properties
 ### Miscellaneous ###
 HELP.md
 .DS_Store
+/mvnw.cmd
+/mvnw
+/.mvn/wrapper/maven-wrapper.properties
