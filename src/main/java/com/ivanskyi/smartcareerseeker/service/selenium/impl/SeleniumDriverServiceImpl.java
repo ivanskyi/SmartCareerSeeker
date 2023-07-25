@@ -1,4 +1,4 @@
-package com.ivanskyi.smartcareerseeker.util;
+package com.ivanskyi.smartcareerseeker.service.selenium.impl;
 
 import com.ivanskyi.smartcareerseeker.service.selenium.SeleniumDriverService;
 import org.openqa.selenium.WebDriver;

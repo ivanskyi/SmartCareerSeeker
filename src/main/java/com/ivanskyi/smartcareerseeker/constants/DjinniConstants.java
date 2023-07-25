@@ -35,4 +35,24 @@ public class DjinniConstants {
             return value;
         }
     }
+
+
+    public enum Other {
+        PAGE_ATTRIBUTE("page="),
+        PAGE_ATTRIBUTE_WITH_REGEX("&page=\\d+"),
+        JOBS_SUBSCRIPTION_LIST_CLASS_NAME("jobs-subscription-list"),
+        A_TAG_NAME("a"),
+        HREF_ATTRIBUTE_NAME("href"),
+        PAGINATION_BUTTONS_CSS_SELECTOR(".pagination_with_numbers li");
+
+        private final String value;
+
+        Other(String value) {
+            this.value = value;
+        }
+
+        public String getValue() {
+            return value;
+        }
+    }
 }

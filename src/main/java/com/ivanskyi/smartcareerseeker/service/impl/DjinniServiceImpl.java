@@ -1,6 +1,7 @@
 package com.ivanskyi.smartcareerseeker.service.impl;
 
 import com.ivanskyi.smartcareerseeker.constants.DjinniConstants;
+import com.ivanskyi.smartcareerseeker.constants.Symbols;
 import com.ivanskyi.smartcareerseeker.model.Vacancy;
 import com.ivanskyi.smartcareerseeker.service.DjinniService;
 import com.ivanskyi.smartcareerseeker.service.selenium.SeleniumDriverService;
@@ -20,12 +21,9 @@ import java.util.stream.Collectors;
 @Service
 public class DjinniServiceImpl implements DjinniService {
 
-    private static final int SHORT_DELAY_IN_SECONDS = 3;
-    public static final int FIVE_SECONDS = 5;
     private final Logger logger = LoggerFactory.getLogger(DjinniServiceImpl.class);
 
     private final SeleniumDriverService seleniumDriverService;
-
     private final String login;
     private final String password;
 
@@ -47,7 +45,7 @@ public class DjinniServiceImpl implements DjinniService {
         logger.info("Start applying process for djinni.co");
         final WebDriver driver = seleniumDriverService.getDriver();
         signIn(driver);
-        waitSeconds(SHORT_DELAY_IN_SECONDS);
+        waitSeconds(Symbols.THREE);
         checkAllMySubscriptions(driver);
         logger.info("Finished applying process for djinni.co");
     }
@@ -64,31 +62,30 @@ public class DjinniServiceImpl implements DjinniService {
     private void checkAllMySubscriptions(final WebDriver driver) {
         logger.info("Commenced verification of subscriptions");
         driver.get(DjinniConstants.Endpoint.MY_SUBS.getValue());
-        for (String subscriptionLink : getSubscriptionLinks(driver)) {
-            visitSubscriptionPage(driver, subscriptionLink);
-        }
+        getSubscriptionLinks(driver).forEach(subscriptionLink -> visitSubscriptionPage(driver, subscriptionLink));
         logger.info("Finished to check my subscriptions");
     }
 
     private void visitSubscriptionPage(final WebDriver driver, final String subscriptionLink) {
         final int numberOfPages = getPageCount(driver);
-        for (int i = 1; i <= numberOfPages; i++) {
+        for (int i = Symbols.ONE; i <= numberOfPages; i++) {
             getPositionsFromPage(driver, modifyURL(subscriptionLink, i));
-            waitSeconds(FIVE_SECONDS);
+            waitSeconds(Symbols.FIVE);
         }
+        System.out.println(ALL_PARSED_VACANCIES);
     }
 
     public static String modifyURL(final String originalURL, final int pageNumber) {
-        final String pageParam = "page=" + pageNumber;
-        boolean hasQueryParams = originalURL.contains("?");
-        if (originalURL.contains("&page=")) {
-            return originalURL.replaceAll("&page=\\d+", "&" + pageParam);
-        } else if (originalURL.endsWith("/")) {
-            return originalURL + "?" + pageParam;
+        final String pageParam = DjinniConstants.Other.PAGE_ATTRIBUTE.getValue() + pageNumber;
+        boolean hasQueryParams = originalURL.contains(Symbols.QUESTION_MARK);
+        if (originalURL.contains(Symbols.AND + DjinniConstants.Other.PAGE_ATTRIBUTE.getValue())) {
+            return originalURL.replaceAll(DjinniConstants.Other.PAGE_ATTRIBUTE_WITH_REGEX.getValue(), Symbols.AND + pageParam);
+        } else if (originalURL.endsWith(Symbols.SLASH)) {
+            return originalURL + Symbols.QUESTION_MARK + pageParam;
         } else if (hasQueryParams) {
-            return originalURL + "&" + pageParam;
+            return originalURL + Symbols.AND + pageParam;
         } else {
-            return originalURL + "?" + pageParam;
+            return originalURL + Symbols.QUESTION_MARK + pageParam;
         }
     }
 
@@ -102,16 +99,16 @@ public class DjinniServiceImpl implements DjinniService {
 
     private List<String> getSubscriptionLinks(final WebDriver driver) {
         logger.info("Started to extract all subscriptions links.");
-        final WebElement subBlock = driver.findElement(By.className("jobs-subscription-list"));
-        final List<WebElement> linkElements = subBlock.findElements(By.tagName("a"));
+        final WebElement subBlock = driver.findElement(By.className(DjinniConstants.Other.JOBS_SUBSCRIPTION_LIST_CLASS_NAME.getValue()));
+        final List<WebElement> linkElements = subBlock.findElements(By.tagName(DjinniConstants.Other.A_TAG_NAME.getValue()));
         return linkElements.stream()
-                .map(linkElement -> linkElement.getAttribute("href"))
+                .map(linkElement -> linkElement.getAttribute(DjinniConstants.Other.HREF_ATTRIBUTE_NAME.getValue()))
                 .collect(Collectors.toList());
     }
 
     private int getPageCount(final WebDriver driver) {
-        final List<WebElement> paginationButtons = driver.findElements(By.cssSelector(".pagination_with_numbers li"));
-        int countOfPages = 0;
+        final List<WebElement> paginationButtons = driver.findElements(By.cssSelector(DjinniConstants.Other.PAGINATION_BUTTONS_CSS_SELECTOR.getValue()));
+        int countOfPages = Symbols.ZERO;
         for (WebElement webElement : paginationButtons) {
             if (isButtonWithNumberOfPage(webElement)) {
                 countOfPages++;
@@ -121,10 +118,10 @@ public class DjinniServiceImpl implements DjinniService {
     }
 
     private boolean isButtonWithNumberOfPage(final WebElement button) {
-        final String textFromButton = button.getText().replaceAll("\\D", "").trim();
+        final String textFromButton = button.getText().replaceAll(Symbols.REGEX_NON_DIGIT, Symbols.EMPTY_SPACE).trim();
         try {
             int numberOfPage = Integer.parseInt(textFromButton);
-            return numberOfPage > 0;
+            return numberOfPage > Symbols.ZERO;
         } catch (NumberFormatException e) {
             return false;
         }
@@ -132,9 +129,10 @@ public class DjinniServiceImpl implements DjinniService {
 
     private void waitSeconds(final int countOfSeconds) {
         try {
-            Thread.sleep(countOfSeconds * 1000L);
-        } catch (Exception e) {
+            Thread.sleep(countOfSeconds * Symbols.MILLISECONDS_IN_ONE_SECOND);
+        } catch (InterruptedException e) {
             logger.error("Got error when tried to make delay.");
+            Thread.currentThread().interrupt();
         }
     }
 }
